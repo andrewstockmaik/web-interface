@@ -53,7 +53,8 @@ def render_template(template_name, **context):
 urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
         '/add_bid', 'add_bid',
-        '/', 'app_base',
+        '/search', 'search'
+        '/', 'home',
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
@@ -66,6 +67,33 @@ class curr_time:
     def GET(self):
         current_time = sqlitedb.getTime()
         return render_template('curr_time.html', time = current_time)
+
+class home:
+    def GET(self):
+        return render_template('home.html')
+
+class search:
+    def GET(self):
+        return render_template('search.html')
+
+    def POST(self):
+        # TODO
+        return ''
+
+class add_bid:
+    def GET(self):
+        get_param = web.input(itemId="")
+        item = get_param['ItemId']
+        return render_template('add_bid.html', itemId = item)
+
+    def POST(self):
+        # # TODO:
+        return ''
+
+class detail:
+    def GET(self):
+        # # TODO:
+        return render_template('detail.html')
 
 class select_time:
     # Aanother GET request, this time to the URL '/selecttime'
