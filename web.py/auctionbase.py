@@ -52,6 +52,8 @@ def render_template(template_name, **context):
 
 urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
+        '/add_bid', 'add_bid',
+        '/', 'app_base',
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
