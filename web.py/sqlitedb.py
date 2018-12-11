@@ -44,8 +44,11 @@ def getTime():
 def getItemById(item_id):
     # TODO: rewrite this method to catch the Exception in case `result' is empty
     query_string = 'select * from Items where item_ID = $itemID'
-    result = query(query_string, {'itemID': item_id})
-    return result[0]
+    try:
+        result = query(query_string, {'itemID': item_id})
+        return result[0]
+    except IndexError:
+        return None
 
 # wrapper method around web.py's db.query method
 # check out http://webpy.org/cookbook/query for more info
