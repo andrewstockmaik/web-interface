@@ -54,9 +54,8 @@ urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
         '/search', 'search',
         '/add_bid', 'add_bid',
-        '/search', 'search'
         '/', 'home',
-        '/detail', 'detail'
+        '/detail(.*)', 'detail'
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
@@ -100,10 +99,13 @@ class search:
         return render_template('search.html', search_result=items, message=message, search=search_params)
 
 class detail:
-    def GET(self):
-        # # TODO:
-        return render_template('detail.html')
-        return render_template('search.html', search_result=items, message=message, search=search_params)
+    def GET(self, item):
+        auction = web.input(item=None)
+        detail = sqlitedb.getItemById(auction.item)
+        categories = sqlitedb.getCategoriesByItemId(auction.item)
+        status = sqlitedb.getStatusByItemId(auction.item)
+        bids = sqlitedb.getBidsByItemId(auction.item)
+        return render_template('detail.html', status=status, bids=bids, categories=categories, details=detail)
 
 class select_time:
     # Aanother GET request, this time to the URL '/selecttime'
@@ -132,7 +134,7 @@ class select_time:
 
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
-        return render_template('select_time.html', message = update_message)
+        return render_template('select_time.html', message = update_message)    
 
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################
