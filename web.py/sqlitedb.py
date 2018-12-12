@@ -40,7 +40,7 @@ def getTime():
 # Note: if the `result' list is empty (i.e. there are no items for a
 # a given ID), this will throw an Exception!
 def getItemById(item_id):
-    query_string = 'select * from Items where item_ID = $itemID'
+    query_string = 'select * from Items where ItemID = $itemID'
     try:
         result = query(query_string, { 'itemID': item_id })
         return result[0]
