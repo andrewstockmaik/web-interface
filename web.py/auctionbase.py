@@ -55,6 +55,7 @@ urls = ('/currtime', 'curr_time',
         '/add_bid', 'add_bid',
         '/search', 'search'
         '/', 'home',
+        '/detail', 'detail'
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
@@ -83,12 +84,46 @@ class search:
 class add_bid:
     def GET(self):
         get_param = web.input(itemId="")
-        item = get_param['ItemId']
+        item = get_param['itemId']
         return render_template('add_bid.html', itemId = item)
 
     def POST(self):
-        # # TODO:
-        return ''
+        try:
+            post_params = web.input()
+            add_result = ''
+            item = post_params['itemID']
+            price = post_params['price']
+            user = post_params['userID']
+            current_time = sqlitedb.getTime()
+
+            # validate inputs
+            if (item == '' or price == '' or user == ''):
+                return render_template('add_bid.html', message='Error: Please fill out all fields')
+
+            if (sqlitedb.getUserById(user) == None):
+                return render_template('add_bid.html', message='Error: User does not exist!')
+
+            if (sqlitedb.getItemById(item) == None):
+                return render_template('add_bid.html', message='Error: Item does not exist!')
+
+            # insert transaction
+            t = sqlitedb.transaction()
+            try:
+                sqlitedb.db.insert('Bids', ItemID=item, UserID=user, Amount=price, Time=current_time)
+
+            except Exception as e:
+                t.rollback()
+                message = str(e)
+
+            else:
+                t.commit()
+                add_result = 1
+                message = 'Success ! Added bid for ' + str(item) + ' by ' + str(user) + ' at $' + str(price)
+
+        except Exception as e:
+            message = str(e)
+
+        return render_template('add_bid.html', message=message, add_result=add_result)
 
 class detail:
     def GET(self):

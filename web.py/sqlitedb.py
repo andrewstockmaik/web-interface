@@ -42,10 +42,34 @@ def getTime():
 def getItemById(item_id):
     query_string = 'select * from Items where item_ID = $itemID'
     try:
-        result = query(query_string, {'itemID': item_id})
+        result = query(query_string, { 'itemID': item_id })
         return result[0]
     except IndexError:
         return None
+
+def getUserById(user_id):
+    query_string = 'select * from Users where UserID = $userID'
+    try:
+        result = query(query_string, { 'userID': user_id })
+        return result[0]
+    except IndexError:
+        return None
+
+def getStatusByItemId(item_id):
+    query_string = 'select * from Items where item_ID = $itemID'
+    try:
+        result = query(query_string, { 'itemID': item_id })
+        return result[0]
+    except IndexError:
+        return None
+
+def getCategoriesByItemId(item_id):
+    query_string = 'select Category from Categories where ItemID = $itemID'
+    return query(query_string, { 'itemID': item_id })
+
+def getBidsByItemId(item_id):
+    query_string = 'select * from Bids where ItemID = $itemID order by Amount DESC, Time DESC'
+    return query(query_string, { 'itemID': item_id })
 
 # wrapper method around web.py's db.query method
 # check out http://webpy.org/cookbook/query for more info
