@@ -52,10 +52,10 @@ def render_template(template_name, **context):
 
 urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
+        '/search', 'search',
         '/add_bid', 'add_bid',
-        '/search', 'search'
         '/', 'home',
-        '/detail', 'detail'
+        '/detail(.*)', 'detail'
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
@@ -78,57 +78,34 @@ class search:
         return render_template('search.html')
 
     def POST(self):
-        # TODO
-        return ''
-
-class add_bid:
-    def GET(self):
-        get_param = web.input(itemId="")
-        item = get_param['itemId']
-        return render_template('add_bid.html', itemId = item)
-
-    def POST(self):
         try:
-            post_params = web.input()
-            add_result = ''
-            item = post_params['itemID']
-            price = post_params['price']
-            user = post_params['userID']
-            current_time = sqlitedb.getTime()
+            search_params = web.input()
+            item_id = search_params['itemID']
+            user_id = search_params['userID']
+            min_price = search_params['minPrice']
+            max_price = search_params['maxPrice']
+            status = search_params['status']
+            desc = search_params['description']
+            category = search_params['category']
+            items = []
 
-            # validate inputs
-            if (item == '' or price == '' or user == ''):
-                return render_template('add_bid.html', message='Error: Please fill out all fields')
-
-            if (sqlitedb.getUserById(user) == None):
-                return render_template('add_bid.html', message='Error: User does not exist!')
-
-            if (sqlitedb.getItemById(item) == None):
-                return render_template('add_bid.html', message='Error: Item does not exist!')
-
-            # insert transaction
-            t = sqlitedb.transaction()
-            try:
-                sqlitedb.db.insert('Bids', ItemID=item, UserID=user, Amount=price, Time=current_time)
-
-            except Exception as e:
-                t.rollback()
-                message = str(e)
-
-            else:
-                t.commit()
-                add_result = 1
-                message = 'Success ! Added bid for ' + str(item) + ' by ' + str(user) + ' at $' + str(price)
+            items = sqlitedb.getItemsOnSearch(item_id, user_id, min_price, max_price, status, desc, category)
+            # @TODO queries in sqlitedb
+            message = 'Success ! Retreived ' + str(len(items)) + ' results.'
 
         except Exception as e:
             message = str(e)
 
-        return render_template('add_bid.html', message=message, add_result=add_result)
+        return render_template('search.html', search_result=items, message=message, search=search_params)
 
 class detail:
-    def GET(self):
-        # # TODO:
-        return render_template('detail.html')
+    def GET(self, item):
+        auction = web.input(item=None)
+        detail = sqlitedb.getItemById(auction.item)
+        categories = sqlitedb.getCategoriesByItemId(auction.item)
+        status = sqlitedb.getStatusByItemId(auction.item)
+        bids = sqlitedb.getBidsByItemId(auction.item)
+        return render_template('detail.html', status=status, bids=bids, categories=categories, details=detail)
 
 class select_time:
     # Aanother GET request, this time to the URL '/selecttime'
@@ -165,7 +142,7 @@ class select_time:
             t.commit()
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
-        return render_template('select_time.html', message = update_message)
+        return render_template('select_time.html', message = update_message)    
 
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################

@@ -56,10 +56,16 @@ def getUserById(user_id):
         return None
 
 def getStatusByItemId(item_id):
-    query_string = 'select * from Items where item_ID = $itemID'
+    query_string = 'select Started, Ends, Currently, Buy_Price from Items where ItemID = $itemID '
     try:
-        result = query(query_string, { 'itemID': item_id })
-        return result[0]
+        result = query(query_string, {'itemID': item_id})
+        started = result[0]['Started']
+        ends = result[0]['Ends']
+        currently = result[0]['Currently']
+        buy_price = result[0]['Buy_Price']
+        now = getTime()
+        status = 'Not Started' if (started > now) else 'Closed' if (ends < now or (buy_price and currently >= buy_price)) else 'Open'
+        return status
     except IndexError:
         return None
 
@@ -80,3 +86,62 @@ def query(query_string, vars = {}):
 
 #TODO: additional methods to interact with your database,
 # e.g. to update the current time
+def getItemsOnSearch(itemID='', userID='', minPrice='', maxPrice='', status='', desc = '', category = ''):
+    _query = 'SELECT * FROM Items, CurrentTime'
+    no_params = (itemID == '' and userID == '' and minPrice == '' and maxPrice == '' and desc == '' and category == '')
+
+    if not no_params:
+        _query += ' WHERE '
+        putAnd = False;
+
+        if (itemID != ''):
+            _query += 'ItemID = ' + itemID
+            putAnd = True
+
+        if (userID != ''):
+            if putAnd:
+                _query += ' AND '
+            _query += 'Seller_UserID = ' + "'" + userID + "'"
+            putAnd = True
+
+        if (minPrice != ''):
+            if putAnd:
+                _query += ' AND '
+            _query += 'Currently >= ' + minPrice
+            putAnd = True
+
+        if (maxPrice != ''):
+            if putAnd:
+                _query += ' AND '
+            _query += 'Currently <= ' + maxPrice
+            putAnd = True
+
+        if (desc != ''):
+            if putAnd:
+                _query += ' AND '
+            _query += 'Description LIKE \'%' + desc + '%\''
+            putAnd = True;
+
+        if (category != ''):
+            if putAnd:
+                _query += ' AND '
+            _query += '(SELECT COUNT(*) FROM Categories WHERE ItemID = Items.ItemID AND Category LIKE \'%' + category + '%\') > 0'
+            putAnd = True;
+
+    if (status != 'all'):
+        if not no_params:
+            _query += ' AND '
+        else:
+            _query += ' WHERE '
+
+        if status == 'open':
+            _query += '(select Time from CurrentTime) between Started and Ends AND (Buy_Price IS NULL OR Currently < Buy_Price)'
+        elif status == 'notStarted':
+            _query += 'Started > (select Time from CurrentTime)'
+        elif status == 'close':
+            _query += '(Ends < (select Time from CurrentTime) OR (Buy_Price NOT NULL AND Currently >= Buy_Price))'
+
+    _query += " ORDER BY Number_of_Bids DESC"
+    result = query(_query)
+    print _query  # debug
+    return result
