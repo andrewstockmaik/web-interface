@@ -152,9 +152,17 @@ class select_time:
 
 
         selected_time = '%s-%s-%s %s:%s:%s' % (yyyy, MM, dd, HH, mm, ss)
-        update_message = '(Hello, %s. Previously selected time was: %s.)' % (enter_name, selected_time)
-        # TODO: save the selected time as the current time in the database
+        update_message = '(Thank you for changing the time %s. The new time selected is: %s.)' % (enter_name, selected_time)
 
+        t = sqlitedb.transaction()
+        query_string = 'update CurrentTime set Time = $time'
+        try:
+            sqlitedb.db.query(query_string, {'time': selected_time})
+        except Exception as e:
+            t.rollback()
+            update_message = str(e)
+        else:
+            t.commit()
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
         return render_template('select_time.html', message = update_message)
