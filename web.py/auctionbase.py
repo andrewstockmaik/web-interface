@@ -110,7 +110,8 @@ class detail:
 class select_time:
     # Aanother GET request, this time to the URL '/selecttime'
     def GET(self):
-        return render_template('select_time.html')
+        time = sqlitedb.getTime()
+        return render_template('select_time.html', time = time)
 
     # A POST request
     #
@@ -129,7 +130,7 @@ class select_time:
 
 
         selected_time = '%s-%s-%s %s:%s:%s' % (yyyy, MM, dd, HH, mm, ss)
-        update_message = '(Thank you for changing the time %s. The new time selected is: %s.)' % (enter_name, selected_time)
+        update_message = '(Thank you for changing the time %s. The new time selected is displayed above.)' % (enter_name)
 
         t = sqlitedb.transaction()
         query_string = 'update CurrentTime set Time = $time'
@@ -137,12 +138,12 @@ class select_time:
             sqlitedb.db.query(query_string, {'time': selected_time})
         except Exception as e:
             t.rollback()
-            update_message = str(e)
+            update_message = 'There was an error setting the time. You can only set the time forward and within the possible computer times.'
         else:
             t.commit()
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
-        return render_template('select_time.html', message = update_message)    
+        return render_template('select_time.html', message = update_message, time = sqlitedb.getTime())
 
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################
