@@ -56,10 +56,15 @@ urls = ('/currtime', 'curr_time',
         '/add_bid', 'add_bid',
         '/', 'home',
         '/detail(.*)', 'detail'
+        # TODO: add additional URLs here
+        # first parameter => URL, second parameter => class name
         )
 
 class curr_time:
     # A simple GET request, to '/currtime'
+    #
+    # Notice that we pass in `current_time' to our `render_template' call
+    # in order to have its value displayed on the web page
     def GET(self):
         current_time = sqlitedb.getTime()
         return render_template('curr_time.html', time = current_time)
@@ -74,75 +79,23 @@ class search:
 
     def POST(self):
         try:
-            input = web.input()
-			user_id = input['userID']
-			min_price = input['minPrice']
-            max_price = input['maxPrice']
-            item_id = input['itemID']
-            desc = input['description']
-            category = input['category']
-			status = input['status']
+            search_params = web.input()
+            item_id = search_params['itemID']
+            user_id = search_params['userID']
+            min_price = search_params['minPrice']
+            max_price = search_params['maxPrice']
+            status = search_params['status']
+            desc = search_params['description']
+            category = search_params['category']
+            items = []
+
             items = sqlitedb.getItemsOnSearch(item_id, user_id, min_price, max_price, status, desc, category)
-
-            message = 'Found ' + str(len(items)) + ' results.'
-
-        except Exception as e:
-            message = str(e)
-
-        return render_template('search.html', search_result=items, message=message, search=input)
-
-class add_bid:
-    def GET(self):
-        get_param = web.input(itemId="");
-        item = get_param['itemId'];
-        return render_template('add_bid.html', itemId = item)
-
-    def POST(self):
-        try:
-            post_params = web.input()
-            add_result = ''
-            item_id = post_params['itemID']
-            price = post_params['price']
-            user_id = post_params['userID']
-            current_time = sqlitedb.getTime()
-
-            # Validation checks
-
-            # make all input fields required
-            if (item_id == '' or price == '' or user_id == ''):
-                return render_template('add_bid.html', message='Error: All fields are required')
-
-            # don't accept bids on items that don't exist
-            if (sqlitedb.getItemById(item_id) == None):
-                return render_template('add_bid.html', message='Error: Invalid Item ID !')
-
-            # Don't accept bids from users that don't exist
-            if (sqlitedb.getUserById(user_id) == None):
-                return render_template('add_bid.html', message='Error: Invalid User ID !')
-
-            # @TODO: add more validation checks
-
-            # insert transaction
-            t = sqlitedb.transaction()
-            try:
-                sqlitedb.db.insert('Bids', ItemID=item_id, UserID=user_id, Amount=price, Time=current_time)
-
-            except Exception as e:
-                t.rollback()
-                message = str(e)
-                #print str(e)
-
-            else:
-                t.commit()
-                message = 'Success ! Added bid for ' + str(item_id) + ' by ' + str(user_id) + ' at $' + str(price)
-                #print 'commited ' + str(t)
-                # @TODO validations
+            message = 'Success ! Retreived ' + str(len(items)) + ' results.'
 
         except Exception as e:
             message = str(e)
 
-        return render_template('add_bid.html', message=message, add_result=add_result)
-
+        return render_template('search.html', search_result=items, message=message, search=search_params)
 
 class detail:
     def GET(self, item):
@@ -156,10 +109,8 @@ class detail:
 class select_time:
     # Another GET request, this time to the URL '/selecttime'
     def GET(self):
-        time = sqlitedb.getTime()
-        return render_template('select_time.html', time = time)
+        return render_template('select_time.html')
 
-    # A POST request
     #
     # You can fetch the parameters passed to the URL
     # by calling `web.input()' for **both** POST requests
@@ -176,7 +127,7 @@ class select_time:
 
 
         selected_time = '%s-%s-%s %s:%s:%s' % (yyyy, MM, dd, HH, mm, ss)
-        update_message = '(Thank you for changing the time %s. The new time selected is displayed above.)' % (enter_name)
+        update_message = '(Thank you for changing the time %s. The new time selected is: %s.)' % (enter_name, selected_time)
 
         t = sqlitedb.transaction()
         query_string = 'update CurrentTime set Time = $time'
@@ -184,12 +135,12 @@ class select_time:
             sqlitedb.db.query(query_string, {'time': selected_time})
         except Exception as e:
             t.rollback()
-            update_message = 'There was an error setting the time. You can only set the time forward and within the possible computer times.'
+            update_message = str(e)
         else:
             t.commit()
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
-        return render_template('select_time.html', message = update_message, time = sqlitedb.getTime())
+        return render_template('select_time.html', message = update_message)    
 
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################
