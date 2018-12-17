@@ -79,24 +79,22 @@ class search:
 
     def POST(self):
         try:
-            search_params = web.input()
-            item_id = search_params['itemID']
-            user_id = search_params['userID']
-            min_price = search_params['minPrice']
-            max_price = search_params['maxPrice']
-            status = search_params['status']
-            desc = search_params['description']
-            category = search_params['category']
-            items = []
-
+            input = web.input()
+			user_id = input['userID']
+			min_price = input['minPrice']
+            max_price = input['maxPrice']
+            item_id = input['itemID']
+            desc = input['description']
+            category = input['category']
+			status = input['status']
             items = sqlitedb.getItemsOnSearch(item_id, user_id, min_price, max_price, status, desc, category)
-            # @TODO queries in sqlitedb
-            message = 'Success ! Retreived ' + str(len(items)) + ' results.'
+
+            message = 'Found ' + str(len(items)) + ' results.'
 
         except Exception as e:
             message = str(e)
 
-        return render_template('search.html', search_result=items, message=message, search=search_params)
+        return render_template('search.html', search_result=items, message=message, search=input)
 
 class add_bid:
     def GET(self):
