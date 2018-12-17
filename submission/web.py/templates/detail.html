@@ -1,0 +1,103 @@
+{% extends "app_base.html" %}
+{% block content %}
+
+{% set isClosed = false %}
+{% set isOpen = false %}
+{% if status == 'Closed' %}
+<h4><span>CLOSED</span></h4>
+{% set isClosed = true %}
+{% elif status == 'Open' %}
+<h4><span>OPEN</span></h4>
+{% set isOpen = true %}
+{% elif status == 'Not Started' %}
+<h4><span>HAS NOT STARTED</span></h4>
+{% endif %}
+
+<h2>Categories:</h2>
+<ul>
+    {% if categories %}
+    {% for result in categories %}
+    {% for key in result %}
+    <span style="font-size: 16px; font-weight: 500;">{{ result[key]|e }}</span>
+    {% endfor %}
+    {% endfor %}
+    {% else %}
+    <div>No categories found</div>
+    {% endif %}
+</ul>
+
+<hr/>
+<h2> {{ details['Name'] }} </h2>
+
+{% if isClosed %}
+{% if bids|length != 0 %}
+<h3>Winning bid: </h3>
+<div class="table-responsive">
+    {% if bids %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Amount</th>
+            <th>User ID</th>
+            <th>Time</th>
+        </tr>
+        </thead>
+        <tr>
+            <td> ${{ bids[0]['Amount']|e }}</td>
+            <td> {{ bids[0]['UserID']|e }}</td>
+            <td> {{ bids[0]['Time']|e }}</td>
+        </tr>
+    </table>
+    {% else %}
+    <div>No Bids.</div>
+    {% endif %}
+</div>
+{% endif %}
+{% elif isOpen %}
+<a href="add_bid?itemId={{ details['ItemID'] }}" target="_blank" class="btn btn-primary">Bid Now </a>
+<h3> Auction Bid History: </h3>
+<div class="table-responsive">
+    {% if bids %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Amount</th>
+            <th>User ID</th>
+            <th>Time</th>
+        </tr>
+        </thead>
+        {% for result in bids %}
+        <tr>
+            <td> ${{ result['Amount']|e }}</td>
+            <td> {{ result['UserID']|e }}</td>
+            <td> {{ result['Time']|e }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <div>No Bids for this item</div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if details %}
+<table class="table table-hover">
+    <thead>
+    <tr><th>Attribute</th><th>Details</th></tr>
+    </thead>
+    <tbody>
+    {% for result in details %}
+    <tr>
+        <td>{{ result.replace("_", " ") }}</td>
+        <td>{{ details[result]|e }}</td>
+    </tr>
+    </tbody>
+    {% endfor %}
+</table>
+{% else %}
+<div>No results found</div>
+{% endif %}
+<hr/>
+
+
+{% endblock %}
