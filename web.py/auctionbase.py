@@ -56,15 +56,10 @@ urls = ('/currtime', 'curr_time',
         '/add_bid', 'add_bid',
         '/', 'home',
         '/detail(.*)', 'detail'
-        # TODO: add additional URLs here
-        # first parameter => URL, second parameter => class name
         )
 
 class curr_time:
     # A simple GET request, to '/currtime'
-    #
-    # Notice that we pass in `current_time' to our `render_template' call
-    # in order to have its value displayed on the web page
     def GET(self):
         current_time = sqlitedb.getTime()
         return render_template('curr_time.html', time = current_time)
@@ -159,7 +154,7 @@ class detail:
         return render_template('detail.html', status=status, bids=bids, categories=categories, details=detail)
 
 class select_time:
-    # Aanother GET request, this time to the URL '/selecttime'
+    # Another GET request, this time to the URL '/selecttime'
     def GET(self):
         time = sqlitedb.getTime()
         return render_template('select_time.html', time = time)
