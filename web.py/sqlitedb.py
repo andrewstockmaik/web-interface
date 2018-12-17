@@ -28,12 +28,12 @@ def transaction():
 #
 # check out http://webpy.org/cookbook/transactions for examples
 
-# returns the current time from your database
+# Returns current time from the database
 def getTime():
     # select [column] from [table]
     query_string = 'select Time from CurrentTime'
     results = query(query_string)
-    # results returns as array, need Time from first (only) entry
+    # results returns as an array, need Time from first (only) entry
     return results[0].Time
 
 # returns a single item specified by the Item's ID in the database
