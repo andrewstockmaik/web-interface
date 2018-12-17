@@ -14,25 +14,12 @@ def enforceForeignKey():
 # initiates a transaction on the database
 def transaction():
     return db.transaction()
-# Sample usage (in auctionbase.py):
-#
-# t = sqlitedb.transaction()
-# try:
-#     sqlitedb.query('[FIRST QUERY STATEMENT]')
-#     sqlitedb.query('[SECOND QUERY STATEMENT]')
-# except Exception as e:
-#     t.rollback()
-#     print str(e)
-# else:
-#     t.commit()
-#
-# check out http://webpy.org/cookbook/transactions for examples
 
 # returns the current time from your database
 def getTime():
     # select [column] from [table]
-    query_string = 'select Time from CurrentTime'
-    results = query(query_string)
+    queryString = 'select Time from CurrentTime'
+    results = query(queryString)
     # results returns as array, need Time from first (only) entry
     return results[0].Time
 
@@ -40,47 +27,52 @@ def getTime():
 # Note: if the `result' list is empty (i.e. there are no items for a
 # a given ID), this will throw an Exception!
 def getItemById(item_id):
-    query_string = 'select * from Items where ItemID = $itemID'
+    queryString = 'select * from Items where ItemID = $itemID'
     try:
-        result = query(query_string, { 'itemID': item_id })
+        result = query(queryString, { 'itemID': item_id })
         return result[0]
     except IndexError:
         return None
 
 def getUserById(user_id):
-    query_string = 'select * from Users where UserID = $userID'
+    queryString = 'select * from Users where UserID = $userID'
     try:
-        result = query(query_string, { 'userID': user_id })
+        result = query(queryString, { 'userID': user_id })
         return result[0]
     except IndexError:
         return None
 
 def getStatusByItemId(item_id):
-    query_string = 'select Started, Ends, Currently, Buy_Price from Items where ItemID = $itemID '
+    queryString = 'select Started, Ends, Currently, Buy_Price from Items where ItemID = $itemID '
     try:
-        result = query(query_string, {'itemID': item_id})
+        result = query(queryString, {'itemID': item_id})
         started = result[0]['Started']
         ends = result[0]['Ends']
-        currently = result[0]['Currently']
         buy_price = result[0]['Buy_Price']
         now = getTime()
-        status = 'Not Started' if (started > now) else 'Closed' if (ends < now or (buy_price and currently >= buy_price)) else 'Open'
+        currently = result[0]['Currently']
+        if (started > now):
+            status = 'Not Started'
+        elif (ends < now or (buy_price and currently >= buy_price)):
+            status = 'Closed'
+        else:
+            status = 'Open'
         return status
     except IndexError:
         return None
 
 def getCategoriesByItemId(item_id):
-    query_string = 'select Category from Categories where ItemID = $itemID'
-    return query(query_string, { 'itemID': item_id })
+    queryString = 'select Category from Categories where ItemID = $itemID'
+    return query(queryString, { 'itemID': item_id })
 
 def getBidsByItemId(item_id):
-    query_string = 'select * from Bids where ItemID = $itemID order by Amount DESC, Time DESC'
-    return query(query_string, { 'itemID': item_id })
+    queryString = 'select * from Bids where ItemID = $itemID order by Amount DESC, Time DESC'
+    return query(queryString, { 'itemID': item_id })
 
 # wrapper method around web.py's db.query method
 # check out http://webpy.org/cookbook/query for more info
-def query(query_string, vars = {}):
-    return list(db.query(query_string, vars))
+def query(queryString, vars = {}):
+    return list(db.query(queryString, vars))
 
 #####################END HELPER METHODS#####################
 
