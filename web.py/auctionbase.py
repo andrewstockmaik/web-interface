@@ -142,6 +142,58 @@ class select_time:
         # we'll refer to it in our template as `message'
         return render_template('select_time.html', message = update_message)    
 
+class add_bid:
+    def GET(self):
+        get_param = web.input(itemId="");
+        item = get_param['itemId'];
+        return render_template('add_bid.html', itemId = item)
+
+    def POST(self):
+        try:
+            post_params = web.input()
+            add_result = ''
+            item_id = post_params['itemID']
+            price = post_params['price']
+            user_id = post_params['userID']
+            current_time = sqlitedb.getTime()
+
+            # Validation checks
+
+            # make all input fields required
+            if (item_id == '' or price == '' or user_id == ''):
+                return render_template('add_bid.html', message='Error: All fields are required')
+
+            # don't accept bids on items that don't exist
+            if (sqlitedb.getItemById(item_id) == None):
+                return render_template('add_bid.html', message='Error: Invalid Item ID !')
+
+            # Don't accept bids from users that don't exist
+            if (sqlitedb.getUserById(user_id) == None):
+                return render_template('add_bid.html', message='Error: Invalid User ID !')
+
+            # @TODO: add more validation checks
+
+            # insert transaction
+            t = sqlitedb.transaction()
+            try:
+                sqlitedb.db.insert('Bids', ItemID=item_id, UserID=user_id, Amount=price, Time=current_time)
+
+            except Exception as e:
+                t.rollback()
+                message = str(e)
+                #print str(e)
+
+            else:
+                t.commit()
+                message = 'Success ! Added bid for ' + str(item_id) + ' by ' + str(user_id) + ' at $' + str(price)
+                #print 'commited ' + str(t)
+                # @TODO validations
+
+        except Exception as e:
+            message = str(e)
+
+        return render_template('add_bid.html', message=message, add_result=add_result)
+
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################
 ###########################################################################################
