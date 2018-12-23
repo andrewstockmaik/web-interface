@@ -69,6 +69,52 @@ class curr_time:
         current_time = sqlitedb.getTime()
         return render_template('curr_time.html', time = current_time)
 
+class add_bid:
+    def GET(self):
+        get_param = web.input(itemId="");
+        item = get_param['itemId'];
+        return render_template('add_bid.html', itemId = item)
+
+    def POST(self):
+        try:
+            post_params = web.input()
+            add_result = ''
+            item_id = post_params['itemID']
+            price = post_params['price']
+            user_id = post_params['userID']
+            current_time = sqlitedb.getTime()
+
+            # Must have all inputs filled out
+            if (item_id == '' or price == '' or user_id == ''):
+                return render_template('add_bid.html', message='Invalid entry: All fields required.')
+
+            # Check item exists
+            if (sqlitedb.getItemById(item_id) == None):
+                return render_template('add_bid.html', message='Invalid entry: Item ID not found.')
+
+            # Check user exists
+            if (sqlitedb.getUserById(user_id) == None):
+                return render_template('add_bid.html', message='Invalid entry: User ID not found.')
+
+            t = sqlitedb.transaction()
+            try:
+                sqlitedb.db.insert('Bids', ItemID=item_id, UserID=user_id, Amount=price, Time=current_time)
+
+            except Exception as e:
+                add_result = 2
+                t.rollback()
+                message = str(e)
+
+            else:
+                t.commit()
+                add_result = 1
+                message = 'Success ! Added bid for ' + str(item_id) + ' by ' + str(user_id) + ' at $' + str(price)
+
+        except Exception as e:
+            message = str(e)
+
+        return render_template('add_bid.html', message=message, add_result=add_result)
+
 class home:
     def GET(self):
         return render_template('home.html')
@@ -140,7 +186,7 @@ class select_time:
             t.commit()
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
-        return render_template('select_time.html', message = update_message)    
+        return render_template('select_time.html', message = update_message)
 
 ###########################################################################################
 ##########################DO NOT CHANGE ANYTHING BELOW THIS LINE!##########################
